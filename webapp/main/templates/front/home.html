@@ -1,0 +1,597 @@
+{% extends 'front/master.html' %} {% load static %} {% block headblock %}
+
+<title>{{ site.name }} | Home</title>
+<meta charset="utf-8" />
+<style>
+  .sparkle-button {
+    --active: 0;
+    --bg: radial-gradient(
+        40% 50% at center 100%,
+        hsl(270 calc(var(--active) * 97%) 72% / var(--active)),
+        transparent
+      ),
+      radial-gradient(
+        80% 100% at center 120%,
+        hsl(260 calc(var(--active) * 97%) 70% / var(--active)),
+        transparent
+      ),
+      hsl(260 calc(var(--active) * 97%) calc((var(--active) * 44%) + 12%));
+    background: var(--bg);
+    font-size: 1.2rem;
+    font-weight: 500;
+    border: 0;
+    cursor: pointer;
+    padding: 1em 1em;
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+    white-space: nowrap;
+    border-radius: 100px;
+    position: relative;
+    box-shadow: 0 0 calc(var(--active) * 3em) calc(var(--active) * 1em)
+        hsl(260 97% 61% / 0.75),
+      0 0em 0 0
+        hsl(260 calc(var(--active) * 97%) calc((var(--active) * 50%) + 30%))
+        inset,
+      0 -0.05em 0 0 hsl(260 calc(var(--active) * 97%) calc(var(--active) * 60%))
+        inset;
+    transition: box-shadow var(--transition), scale var(--transition),
+      background var(--transition);
+    scale: calc(1 + (var(--active) * 0.1));
+    transition: 0.3s;
+  }
+
+  .sparkle-button:active {
+    scale: 1;
+    transition: 0.3s;
+  }
+
+  .sparkle path {
+    color: hsl(0 0% calc((var(--active, 0) * 70%) + var(--base)));
+    transform-box: fill-box;
+    transform-origin: center;
+    fill: currentColor;
+    stroke: currentColor;
+    animation-delay: calc((var(--transition) * 1.5) + (var(--delay) * 1s));
+    animation-duration: 0.6s;
+    transition: color var(--transition);
+  }
+
+  .sparkle-button:is(:hover, :focus-visible) path {
+    animation-name: bounce;
+  }
+
+  @keyframes bounce {
+    35%,
+    65% {
+      scale: var(--scale);
+    }
+  }
+
+  .sparkle path:nth-of-type(1) {
+    --scale: 0.5;
+    --delay: 0.1;
+    --base: 40%;
+  }
+
+  .sparkle path:nth-of-type(2) {
+    --scale: 1.5;
+    --delay: 0.2;
+    --base: 20%;
+  }
+
+  .sparkle path:nth-of-type(3) {
+    --scale: 2.5;
+    --delay: 0.35;
+    --base: 30%;
+  }
+
+  .sparkle-button:before {
+    content: "";
+    position: absolute;
+    inset: -0.2em;
+    z-index: -1;
+    border: 0.25em solid hsl(260 97% 50% / 0.5);
+    border-radius: 100px;
+    opacity: var(--active, 0);
+    transition: opacity var(--transition);
+  }
+
+  .spark {
+    position: absolute;
+    inset: 0;
+    border-radius: 100px;
+    rotate: 0deg;
+    overflow: hidden;
+    mask: linear-gradient(white, transparent 50%);
+    animation: flip calc(var(--spark) * 2) infinite steps(2, end);
+  }
+
+  @keyframes flip {
+    to {
+      rotate: 360deg;
+    }
+  }
+
+  .spark:before {
+    content: "";
+    position: absolute;
+    width: 200%;
+    aspect-ratio: 1;
+    top: 0%;
+    left: 50%;
+    z-index: -1;
+    translate: -50% -15%;
+    rotate: 0;
+    transform: rotate(-90deg);
+    opacity: calc((var(--active)) + 0.4);
+    background: conic-gradient(from 0deg, transparent 0 340deg, white 360deg);
+    transition: opacity var(--transition);
+    animation: rotate var(--spark) linear infinite both;
+  }
+
+  .spark:after {
+    content: "";
+    position: absolute;
+    inset: var(--cut);
+    border-radius: 100px;
+  }
+
+  .backdrop {
+    position: absolute;
+    inset: var(--cut);
+    background: var(--bg);
+    border-radius: 100px;
+    transition: background var(--transition);
+  }
+
+  @keyframes rotate {
+    to {
+      transform: rotate(90deg);
+    }
+  }
+
+  @supports (selector(:has(:is(+ *)))) {
+    body:has(button:is(:hover, :focus-visible)) {
+      --active: 1;
+      --play-state: running;
+    }
+
+    .bodydrop {
+      display: none;
+    }
+  }
+
+  .sparkle-button:is(:hover, :focus-visible) ~ :is(.bodydrop, .particle-pen) {
+    --active: 1;
+    --play-state: runnin;
+  }
+
+  .sparkle-button:is(:hover, :focus-visible) {
+    --active: 1;
+    --play-state: running;
+  }
+
+  .sp {
+    position: relative;
+  }
+
+  .particle-pen {
+    position: absolute;
+    width: 200%;
+    aspect-ratio: 1;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    -webkit-mask: radial-gradient(white, transparent 65%);
+    z-index: -1;
+    opacity: var(--active, 0);
+    transition: opacity var(--transition);
+  }
+
+  .particle {
+    fill: white;
+    width: calc(var(--size, 0.25) * 1rem);
+    aspect-ratio: 1;
+    position: absolute;
+    top: calc(var(--y) * 1%);
+    left: calc(var(--x) * 1%);
+    opacity: var(--alpha, 1);
+    animation: float-out calc(var(--duration, 1) * 1s) calc(var(--delay) * -1s)
+      infinite linear;
+    transform-origin: var(--origin-x, 1000%) var(--origin-y, 1000%);
+    z-index: -1;
+    animation-play-state: var(--play-state, paused);
+  }
+
+  .particle path {
+    fill: hsl(0 0% 90%);
+    stroke: none;
+  }
+
+  .particle:nth-of-type(even) {
+    animation-direction: reverse;
+  }
+
+  @keyframes float-out {
+    to {
+      rotate: 360deg;
+    }
+  }
+
+  .text {
+    translate: 2% -6%;
+    letter-spacing: 0.01ch;
+    background: linear-gradient(
+      90deg,
+      hsl(0 0% calc((var(--active) * 100%) + 65%)),
+      hsl(0 0% calc((var(--active) * 100%) + 26%))
+    );
+    -webkit-background-clip: text;
+    color: transparent;
+    transition: background var(--transition);
+  }
+
+  .sparkle-button svg {
+    inline-size: 1.25em;
+    translate: -25% -5%;
+  }
+  .input {
+    color: pink; /* Change to the desired text color */
+    font-size: 0.9rem;
+    background-color: transparent;
+    width: 100%;
+    box-sizing: border-box;
+    padding-inline: 0.5em;
+    padding-block: 0.7em;
+    border: none;
+    border-bottom: var(--border-height) solid var(--border-before-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .input-border {
+    position: absolute;
+    background: var(--border-after-color);
+    width: 0%;
+    height: 2px;
+    bottom: 0;
+    left: 0;
+    transition: width 0.3s cubic-bezier(0.6, -0.28, 0.735, 0.045);
+  }
+
+  .input:focus {
+    outline: none;
+  }
+
+  .input:focus + .input-border {
+    width: 100%;
+  }
+
+  .form-control {
+    position: relative;
+    --width-of-input: 300px;
+  }
+
+  .input-alt {
+    font-size: 1.2rem;
+    padding-inline: 1em;
+    padding-block: 0.8em;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .input-border-alt {
+    height: 3px;
+    background: linear-gradient(90deg, #ff6464 0%, #ffbf59 50%, #47c9ff 100%);
+    transition: width 0.4s cubic-bezier(0.42, 0, 0.58, 1);
+  }
+
+  .input-alt:focus + .input-border-alt {
+    width: 100%;
+  }
+</style>
+{% endblock %} {% block mainblock %}
+<div class="site-blocks-cover overlay" data-aos="fade" id="home-section">
+  <div class="container">
+    <div class="row align-items-center justify-content-center">
+      <div class="container-fluid" style="border: 2px; height: 600px; width: 100%">
+        <div class="row justify-content-center align-items-center" style="height: 100vh">
+          <div class="container-xxl mx-auto p-2" style="border: 2px; max-width: 1100px; height: 560px">
+            <div class="container-lg mt-5" style="border: 2px; max-width: 600px; height: 250px">
+              <div class="container-md mt-5" style="border: 2px; max-width: 400px; height: 150px">
+                <h4 style="align-text: center; padding-top: 50px; font-family: monospace;">
+                  WHAT ARE YOU LOOKING FOR ?
+                </h4>
+              </div>
+              <div class="container-md mt-1">
+
+                {% comment %} this is block we have to redirect {% endcomment %}
+                <a href="/streamlit" class="sparkle-button">
+                  <span class="spark"></span>
+                  <span class="backdrop"></span>
+                  <svg class="sparkle" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- SVG path here -->
+                  </svg>
+                  <span class="text">PICKY Advance Search</span>
+                </a>
+                <div class="bodydrop"></div>
+                <span aria-hidden="true" class="particle-pen">
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg><svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg><svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg><svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg><svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg><svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg><svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg><svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg><svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg><svg class="particle" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.937 3.846L7.75 1L8.563 3.846C8.77313 4.58114 9.1671 5.25062 9.70774 5.79126C10.2484 6.3319 10.9179 6.72587 11.653 6.936L14.5 7.75L11.654 8.563C10.9189 8.77313 10.2494 9.1671 9.70874 9.70774C9.1681 10.2484 8.77413 10.9179 8.564 11.653L7.75 14.5L6.937 11.654C6.72687 10.9189 6.3329 10.2494 5.79226 9.70874C5.25162 9.1681 4.58214 8.77413 3.847 8.564L1 7.75L3.846 6.937C4.58114 6.72687 5.25062 6.3329 5.79126 5.79226C6.3319 5.25162 6.72587 4.58214 6.936 3.847L6.937 3.846Z" fill="black" stroke="black" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        function redirectToIndex() {
+          // Redirect the user to front/index.html
+          window.location.href = "/front/index.html";
+        }
+      </script>
+
+      <a href="#about-section" class="mouse smoothscroll">
+        <span class="mouse-icon">
+          <span class="mouse-wheel"></span>
+        </span>
+      </a>
+    </div>
+    <div class="site-section cta-big-image" id="about-section">
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-12 text-center" data-aos="fade">
+            <h2 class="section-title mb-3">About Us</h2>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-6 mb-5" data-aos="fade-up" data-aos-delay="">
+            <figure class="circle-bg">
+              <img
+                src="{% static 'front/images/about.jpg' %}"
+                alt="Image"
+                class="img-fluid"
+              />
+            </figure>
+          </div>
+          <div class="col-lg-5 ml-auto" data-aos="fade-up" data-aos-delay="100">
+            <div class="mb-4">
+              <h3 class="h3 mb-4 text-black">For the new savings</h3>
+              <p>
+                PICKY is created by Gurleen. Here you can search product and
+                compare there prices.
+              </p>
+            </div>
+
+            <div class="mb-4">
+              <ul class="list-unstyled ul-check success">
+                <li>THINK OF A PRODUCT!</li>
+                <li>SEARCH THAT PRODUCT!!</li>
+                <li>WE PROVIDE YOU BEST PRICE!! TADA!!/li></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="site-section border-bottom bg-light" id="services-section">
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-12 text-center" data-aos="fade">
+            <h2 class="section-title mb-3">Our Services</h2>
+          </div>
+        </div>
+        <div class="row align-items-stretch">
+          <div class="col-md-6 col-lg-4 mb-4 mb-lg-4" data-aos="fade-up">
+            <div class="unit-4">
+              <div class="unit-4-icon mr-4">
+                <span class="text-primary flaticon-startup"></span>
+              </div>
+              <div>
+                <h3>MARKET TRENDING</h3>
+                <p>
+                  Get the product from the various range and get to know about
+                  that product.
+                </p>
+                <p><a href="/consult">Learn More</a></p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="col-md-6 col-lg-4 mb-4 mb-lg-4"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
+            <div class="unit-4">
+              <div class="unit-4-icon mr-4">
+                <span class="text-primary flaticon-idea"></span>
+              </div>
+              <div>
+                <h3>Price comperison</h3>
+                <p>Get price comperison from different site under one roof.</p>
+
+                <p><a href="/stock">Learn More</a></p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="col-md-6 col-lg-4 mb-4 mb-lg-4"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            <div class="unit-4">
+              <div class="unit-4-icon mr-4">
+                <span class="text-primary flaticon-graphic-design"></span>
+              </div>
+              <div>
+                <h3>Market Analysis</h3>
+                <p>
+                  our services do amrket analysis and get you best product at
+                  low price.
+                </p>
+
+                <p><a href="/market">Learn More</a></p>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="col-md-6 col-lg-4 mb-4 mb-lg-4"
+            data-aos="fade-up"
+            data-aos-delay=""
+          >
+            <div class="unit-4">
+              <div class="unit-4-icon mr-4">
+                <span class="text-primary flaticon-settings"></span>
+              </div>
+              <div>
+                <h3>saving time</h3>
+                <p>
+                  Real user monitoring is a passive monitoring technology that
+                  that saves your time.
+                </p>
+                {% comment %}
+                <p><a href="/monitoring">Learn More</a></p>
+                {% endcomment %}
+              </div>
+            </div>
+          </div>
+          <div
+            class="col-md-6 col-lg-4 mb-4 mb-lg-4"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
+            <div class="unit-4">
+              <div class="unit-4-icon mr-4">
+                <span class="text-primary flaticon-smartphone"></span>
+              </div>
+              <div>
+                <h3>Product recommendation</h3>
+                <p>soon....</p>
+                {% comment %}
+                <p><a href="/investment">Learn More</a></p>
+                {% endcomment %}
+              </div>
+            </div>
+          </div>
+          <div
+            class="col-md-6 col-lg-4 mb-4 mb-lg-4"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            <div class="unit-4">
+              <div class="unit-4-icon mr-4">
+                <span class="text-primary flaticon-head"></span>
+              </div>
+              <div>
+                <h3>Product Management</h3>
+                <p>soon....</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="site-section border-bottom .mx-auto" id="team-section">
+      <div class="container .mx-auto">
+        <div class="row mb-5 justify-content-center">
+          <div class="col-md-8 text-center">
+            <h2 class="section-title mb-3" data-aos="fade-up" data-aos-delay="">
+              Who created?
+            </h2>
+            <p class="lead" data-aos="fade-up" data-aos-delay="100">
+              Connect with us for more information and guidance.
+            </p>
+          </div>
+        </div>
+        <div class="row justify-content-center">
+          <div
+            class="col-md-6 col-lg-3 mb-4"
+            data-aos="fade-up"
+            data-aos-delay=""
+          >
+            <div class="team-member">
+              <figure>
+                <ul class="social">
+                  <li>
+                    <a><span class="icon-facebook"></span></a>
+                  </li>
+                  <li>
+                    <a
+                      href="https://www.linkedin.com/in/er-gurleen-kaur-6a8755229/"
+                      ><span class="icon-linkedin"></span
+                    ></a>
+                  </li>
+                </ul>
+                <img
+                  style="width: 250px; height: 250px"
+                  src="{% static 'front/images/gurleen.jpg' %}"
+                  alt="Image"
+                  class="img-fluid"
+                />
+              </figure>
+              <div class="p-3">
+                <h3>Gurleen</h3>
+                <h4>Roll-no 17022000346</h4>
+                <span class="position">Product Manager</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    {% endblock %}
+  </div>
+</div>
