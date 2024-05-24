@@ -1,0 +1,47 @@
+{% extends 'front/master.html' %} {% load static %} {% block headblock %}
+
+<title>PICKY | Monitoring</title>
+<meta charset="utf-8" />
+
+{% endblock %} {% block mainblock %}
+
+<div class="site-section cta-big-image" id="about-section">
+  <div class="container">
+    <div class="row mb-5">
+      <div class="col-12 text-center" data-aos="fade">
+        <h2 class="section-title mb-3">User experience</h2>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-lg-6 mb-5" data-aos="fade-up" data-aos-delay="">
+        <figure class="circle-bg">
+          <img
+            src="{% static 'front/images/about.jpg' %}"
+            alt="Image"
+            class="img-fluid"
+          />
+        </figure>
+      </div>
+      <div class="col-lg-5 ml-auto" data-aos="fade-up" data-aos-delay="100">
+        <div class="mb-4">
+          <h3 class="h3 mb-4 text-black">For the best price</h3>
+          <p style="text-align: justify">
+            This help you into find same product at low price
+          </p>
+        </div>
+
+        <div class="mb-4">
+          <ul class="list-unstyled ul-check success">
+            <li>We take care of your needs of online shopping.</li>
+            <li>
+              Our team will provide you with best price and will add new
+              features in future soon....
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
